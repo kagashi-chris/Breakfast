@@ -31,11 +31,11 @@ export class EnemyManager {
   }
 
   private spawnEnemiesForStage(stage: StageType): void {
+    const centerX = this.scene.scale.width / 2;
+    const centerY = this.scene.scale.height / 2;
     if (stage === 'GlennHM') {
-      const centerX = this.scene.scale.width / 2;
-      const centerY = this.scene.scale.height / 2;
       console.log('spawning enemy');
-      this.spawnEnemy(centerX, centerY, 999999);
+      this.spawnEnemy(centerX, centerY, 9999999);
     }
   }
 
