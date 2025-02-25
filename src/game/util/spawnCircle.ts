@@ -15,19 +15,17 @@ import Phaser from 'phaser';
  *                  Receives the player and the circle as Arcade-enabled objects.
  * @param duration Duration (in ms) the circle stays in the scene (default 2000ms).
  */
-
-export function spawnTemporaryCircle(
+export function spawnCircle(
   scene: Phaser.Scene,
   x: number,
   y: number,
   radius: number,
   color: number,
-  player: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+  intersectObj: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+  duration: number = 0,
   onOverlap: (
-    playerObj: Phaser.Types.Physics.Arcade.GameObjectWithBody,
-    circleObj: Phaser.Types.Physics.Arcade.GameObjectWithBody
+    affectedObj: Phaser.Types.Physics.Arcade.GameObjectWithBody,
   ) => void,
-  duration: number = 2000
 ): void {
   // Create the circle
   const circle = scene.add.circle(x, y, radius, color);
@@ -40,11 +38,11 @@ export function spawnTemporaryCircle(
 
   // Set up an overlap check between the player and the circle.
   scene.physics.add.overlap(
-    player,
+    intersectObj,
     circle,
-    (playerObj, circleObj) => {
+    (affectedObj) => {
       // Execute the provided callback
-      onOverlap(playerObj as Phaser.Types.Physics.Arcade.GameObjectWithBody, circleObj as Phaser.Types.Physics.Arcade.GameObjectWithBody);
+      onOverlap(affectedObj as Phaser.Types.Physics.Arcade.GameObjectWithBody);
       // Optionally, destroy the circle immediately to prevent repeated triggers.
       circle.destroy();
     },
