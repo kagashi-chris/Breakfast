@@ -6,6 +6,9 @@ export class PlayerManager {
   private scene: Phaser.Scene;
   private speed: number = 500;
   private targetPosition: Phaser.Math.Vector2 | null = null;
+  private playerKnockedBack: boolean = false;
+  private knockDownDuration: number = 0;
+
   private keys: {
     up: Phaser.Input.Keyboard.Key;
     down: Phaser.Input.Keyboard.Key;
@@ -36,6 +39,14 @@ export class PlayerManager {
     scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       this.targetPosition = new Phaser.Math.Vector2(pointer.x, pointer.y);
     });
+  }
+
+  // knockDownPlayer(origin, duration, knockDownDistance, knockDownVelocity,) {
+
+  // }
+
+  getPlayerPosition(): Phaser.Math.Vector2 {
+    return new Phaser.Math.Vector2(this.player.x, this.player.y);
   }
 
   update(delta: number): void {

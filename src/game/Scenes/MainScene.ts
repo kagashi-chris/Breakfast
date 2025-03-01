@@ -22,7 +22,7 @@ export class MainScene extends Phaser.Scene {
 
     // Create and initialize the player manager.
     this.playerManager = new PlayerManager(this);
-    this.enemyManager = new EnemyManager(this);
+    this.enemyManager = new EnemyManager(this, this.playerManager);
   }
 
   update(time: number, delta: number): void {
