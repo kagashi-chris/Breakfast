@@ -13,18 +13,40 @@ import Phaser from 'phaser';
  * @param alpha - The opacity of the outline.
  * @returns A Graphics object representing the circle outline.
  */
-export function spawnCircleOutline(
+// export function spawnCircleOutline(
+//   scene: Phaser.Scene,
+//   center: Phaser.Math.Vector2,
+//   radius: number,
+//   borderThickness: number,
+//   color: number,
+//   alpha: number = 1
+// ): Phaser.GameObjects.Graphics {
+//   const outline = scene.add.graphics();
+//   outline.lineStyle(borderThickness, color, alpha);
+//   outline.strokeCircle(center.x, center.y, radius);
+//   return outline;
+// }
+
+export function spawnCircleOutlineContainer(
   scene: Phaser.Scene,
   center: Phaser.Math.Vector2,
   radius: number,
   borderThickness: number,
   color: number,
   alpha: number = 1
-): Phaser.GameObjects.Graphics {
+): Phaser.GameObjects.Container {
+  // Create a container.
+  const container = scene.add.container(center.x, center.y);
+  
+  // Create the outline graphics, but draw the circle at (0,0).
   const outline = scene.add.graphics();
   outline.lineStyle(borderThickness, color, alpha);
-  outline.strokeCircle(center.x, center.y, radius);
-  return outline;
+  outline.strokeCircle(0, 0, radius);
+  
+  // Add the outline to the container.
+  container.add(outline);
+  
+  return container;
 }
 
 /**
@@ -45,14 +67,22 @@ export function animateFillCircle(
   fillColor: number,
   fillAlpha: number,
   duration: number
-): Phaser.GameObjects.Graphics {
+): Phaser.GameObjects.Container {
+  // Create a container at the specified center.
+  const container = scene.add.container(center.x, center.y);
+
+  // Create a graphics object for the fill, drawn at (0, 0) in the container.
   const fill = scene.add.graphics();
   fill.fillStyle(fillColor, fillAlpha);
-  // Start with radius 0.
-  fill.fillCircle(center.x, center.y, 0);
+  fill.fillCircle(0, 0, 0); // Start with radius 0.
 
+  // Add the fill graphics to the container.
+  container.add(fill);
+
+  // Object to tween the radius value.
   const tweenObj = { radius: 0 };
 
+  // Tween the radius from 0 to finalRadius over the specified duration.
   scene.tweens.add({
     targets: tweenObj,
     radius: finalRadius,
@@ -61,14 +91,14 @@ export function animateFillCircle(
     onUpdate: () => {
       fill.clear();
       fill.fillStyle(fillColor, fillAlpha);
-      fill.fillCircle(center.x, center.y, tweenObj.radius);
+      fill.fillCircle(0, 0, tweenObj.radius);
     },
     onComplete: () => {
-      // Optionally perform additional actions on complete.
+      // Optionally perform additional actions when complete.
     }
   });
 
-  return fill;
+  return container;
 }
 
 

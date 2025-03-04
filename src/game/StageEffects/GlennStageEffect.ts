@@ -1,7 +1,7 @@
 // src/managers/GlennStageEffect.ts
 import Phaser from 'phaser';
 import { PlayerManager } from '../ObjectManagers/PlayerManager';
-import { spawnCircleOutline, animateFillCircle, createDamageCircle } from '../util/circleAttacks';
+import { animateFillCircle, createDamageCircle, spawnCircleOutlineContainer } from '../util/circleAttacks';
 
 export class GlennStageEffect {
   private scene: Phaser.Scene;
@@ -10,17 +10,19 @@ export class GlennStageEffect {
   private chillElapsed: number = 0;
 
   //redCircleDur and redDamageCircleDuration should add up to redCircleSpawnInterval so new ones spawn as they get deleted
-  private redCircleSpawnInterval: number = 20000;
-  private redCircleDur: number = 2000;
+  // private redCircleSpawnInterval: number = 20000;
+  private redCircleDur: number = 3000;
   private redCircleAmount: number = 8;
   private redCircleRadius: number = 150;
   private redCircleThickness: number = 2;
-  private redDamageCircleDuration: number = 15000;
+  private redDamageCircleDuration: number = 17000;
 
-  private chillCircleSpawnInterval: number = 15000;
+  private chillCircleSpawnInterval: number = 12000;
   private chillCircleDur: number = 4000;
   private chillCircleRadius: number = 150;
-  private chillCircleThickness: number = 2;
+  private chillCircleThickness: number = 4;
+
+  private followPlayerList: Phaser.GameObjects.Container[] = [];
 
   constructor(scene: Phaser.Scene, playerManager: PlayerManager) {
     this.scene = scene;
@@ -28,11 +30,48 @@ export class GlennStageEffect {
   }
 
   private spawnChillCircle(): void {
-    console.log('spawning chill circle');
+    const chillCircleContainer = spawnCircleOutlineContainer(
+      this.scene,
+      this.playerManager.getPlayerPosition(),
+      this.chillCircleRadius,
+      this.chillCircleThickness,
+      0xffffff,
+      0.8
+    );
+
+    const chillFill = animateFillCircle(
+      this.scene,
+      this.playerManager.getPlayerPosition(),
+      this.redCircleRadius,
+      0xffffff,
+      0.5,
+      this.chillCircleDur
+    );
+    
+    this.followPlayerList.push(chillCircleContainer);
+    this.followPlayerList.push(chillFill);
+    this.scene.time.delayedCall(this.chillCircleDur, () => {
+      const index = this.followPlayerList.indexOf(chillCircleContainer);
+      if (index > -1) {
+        this.followPlayerList.splice(index, 1);
+      }
+      const index2 = this.followPlayerList.indexOf(chillFill);
+      if (index2 > -1) {
+        this.followPlayerList.splice(index2, 1);
+      }
+      chillCircleContainer.destroy();
+      spawnCircleOutlineContainer(
+        this.scene,
+        this.playerManager.getPlayerPosition(),
+        this.chillCircleRadius,
+        this.chillCircleThickness,
+        0xffffff,
+        0.8
+      );
+    });
   }
 
   private spawnRedCircles(): void {
-    console.log('spawning red circles');
     const centerX = this.scene.scale.width / 2;
     const centerY = this.scene.scale.height / 2;
     
@@ -42,7 +81,7 @@ export class GlennStageEffect {
       const offsetY = (Math.random() ** 2) * centerY * (Math.random() < 0.5 ? -1 : 1);
       const center = new Phaser.Math.Vector2(centerX + offsetX, centerY + offsetY);
       
-      const outline = spawnCircleOutline(
+      const outline = spawnCircleOutlineContainer(
         this.scene,
         center,
         this.redCircleRadius,
@@ -77,28 +116,16 @@ export class GlennStageEffect {
         );
         
         // Destroy the damage circle after redredDamageCircleDuration.
-        this.scene.time.delayedCall(this.redDamageCircleDuration - this.redCircleDur, () => {
+        this.scene.time.delayedCall(this.redDamageCircleDuration, () => {
           damageCircle.destroy();
         });
       });
     }
   }
 
-  // public update(time: number, delta: number): void {
-  //   this.elapsed += delta;
-  //   if (this.elapsed >= this.redCircleSpawnInterval) {
-  //     this.spawnRedCircles();
-  //     this.elapsed = 0;
-  //   }
-  //   if (this.elapsed >= this.chillCircleSpawnInterval) {
-  //     this.spawnChillCircle();
-  //     this
-  //   }
-  // }
-
   public update(time: number, delta: number): void {
     this.redElapsed += delta;
-    if (this.redElapsed >= this.redCircleSpawnInterval) {
+    if (this.redElapsed >= this.redCircleDur + this.redDamageCircleDuration) {
       this.spawnRedCircles();
       this.redElapsed = 0;
     }
@@ -107,6 +134,16 @@ export class GlennStageEffect {
     if (this.chillElapsed >= this.chillCircleSpawnInterval) {
       this.spawnChillCircle();
       this.chillElapsed = 0;
+    }
+
+    const playerPos = this.playerManager.getPlayerPosition();
+
+    for (let i = 0; i < this.followPlayerList.length; i++) {
+      // Assuming these are Containers, you can use setPosition.
+      (this.followPlayerList[i] as Phaser.GameObjects.Container).setPosition(
+        playerPos.x,
+        playerPos.y
+      );
     }
   }
 
