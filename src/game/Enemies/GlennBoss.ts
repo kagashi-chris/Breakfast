@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { BaseEnemy } from './BaseEnemy';
 import { PlayerManager } from '../ObjectManagers/PlayerManager';
-import { lineWarning } from '../util/attackIndicators';
 import { shootSingleLaser } from '../util/laserAttack';
 import { teleportToTarget } from '../util/teleport';
 
@@ -50,7 +49,7 @@ export class GlennBoss extends BaseEnemy {
       'Teleport',
       // 'Sword',
       // 'SummonTornado',
-      // 'ShotgunLaser',
+      'ShotgunLaser',
       // 'TornadoSlash'
     ];
     const randomIndex = Phaser.Math.Between(0, moves.length - 1);
@@ -62,19 +61,61 @@ export class GlennBoss extends BaseEnemy {
     }
 
     if (selectedMove === 'Teleport') {
-      this.teleportToPlayer();
+      this.executeTeleportToPlayer();
+    }
+
+    if (selectedMove === 'ShotgunLaser') {
+      this.executeShotgunLaser();
     }
 
     const duration = this.attackDurations[selectedMove];
     this.nextAttackTime = currentTime + duration;
   }
 
-  teleportToPlayer(): void {
+  executeTeleportToPlayer(): void {
     teleportToTarget(this.scene, this.gameObject, this.playerManager.player, 200);
   }
 
+  executeShotgunLaser(): void {
+  // Get the boss's position.
+  const bossPos = new Phaser.Math.Vector2(this.gameObject.x, this.gameObject.y);
+  // Get the player's current position.
+  const playerPos = this.playerManager.getPlayerPosition();
+  
+  // Compute the normalized direction from the boss to the player.
+  const direction = new Phaser.Math.Vector2(
+    playerPos.x - bossPos.x,
+    playerPos.y - bossPos.y
+  ).normalize();
+  
+  // Compute a perpendicular vector to the direction.
+  const perpendicular = new Phaser.Math.Vector2(-direction.y, direction.x);
+  
+  const numberOfLasers = 7;
+  const spacing = 100; // pixels between each laser origin
+  
+  // Spawn all 7 lasers simultaneously.
+  for (let i = 0; i < numberOfLasers; i++) {
+    // Calculate the offset along the perpendicular.
+    const offset = (i - Math.floor(numberOfLasers / 2)) * spacing;
+    const origin = bossPos.clone().add(perpendicular.clone().scale(offset));
+    const target = playerPos.clone(); // Laser always targets the player.
+    
+    shootSingleLaser(
+      this.scene,
+      origin,
+      target,
+      5, 
+      1000,
+      1500,
+      0xff0000,
+      this.playerManager.player
+    );
+  }
+
+  }  
+
   executeGroupLaser(): void {
-    console.log('executing group laser');
     for (let i = 0; i < this.laserNumbers; i++) {
       this.scene.time.delayedCall(i * 150, () => {
         let randomPoint: Phaser.Math.Vector2;
