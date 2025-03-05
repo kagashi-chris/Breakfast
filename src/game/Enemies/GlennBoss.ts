@@ -15,7 +15,8 @@ export class GlennBoss extends BaseEnemy {
   private laserNumbers: number = 24;
   private laserRadius: number = 300;
 
-  private teleportSlashDistance: number = 400;
+  private teleportDistance: number = 400;
+
   private swordSlashDistance: number = 400;
   private attackPauseDuration: number = 400;
 
@@ -46,6 +47,12 @@ export class GlennBoss extends BaseEnemy {
     this.canAttack = true;
   }
 
+  getDistanceFromPlayer(): number {
+    const bossPos = new Phaser.Math.Vector2(this.gameObject.x, this.gameObject.y);
+    const currentPlayerPos = this.playerManager.getPlayerPosition();
+    return Phaser.Math.Distance.Between(bossPos.x, bossPos.y, currentPlayerPos.x, currentPlayerPos.y);
+  }
+
   attack(currentTime: number): void {
     const moves: GlennBossMoves[] = [
       'GroupLaser',
@@ -65,6 +72,7 @@ export class GlennBoss extends BaseEnemy {
     }
 
     if (selectedMove === 'Teleport') {
+      if (this.getDistanceFromPlayer() <= this.teleportDistance) return;
       this.executeTeleportToPlayer();
     }
 
@@ -73,6 +81,7 @@ export class GlennBoss extends BaseEnemy {
     }
 
     if (selectedMove === 'Slash') {
+      if (this.getDistanceFromPlayer() >= this.swordSlashDistance) return;
       this.executeSlashAttack();
     }
 
@@ -81,16 +90,9 @@ export class GlennBoss extends BaseEnemy {
   }
 
   executeSlashAttack(): void {
-    console.log('slashing!');
-    
-    const bossPos = new Phaser.Math.Vector2(this.gameObject.x, this.gameObject.y);
-    const currentPlayerPos = this.playerManager.getPlayerPosition();
-    const distance = Phaser.Math.Distance.Between(bossPos.x, bossPos.y, currentPlayerPos.x, currentPlayerPos.y);
     const attackDur = (this.attackDurations.Slash - (this.attackPauseDuration * 3)-100) / 3;
-    
-    console.log('distance', distance);
-    
-    if (distance >= this.teleportSlashDistance) {
+  
+    if (this.getDistanceFromPlayer() >= this.swordSlashDistance) {
       teleportToTarget(this.scene, this.gameObject, this.playerManager.player, 200);
     }
     
@@ -131,9 +133,6 @@ export class GlennBoss extends BaseEnemy {
     });
   }
   
-  
-  
-
   executeTeleportToPlayer(): void {
     teleportToTarget(this.scene, this.gameObject, this.playerManager.player, 200);
   }
