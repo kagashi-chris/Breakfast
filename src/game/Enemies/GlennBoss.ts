@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import { BaseEnemy } from './BaseEnemy';
 import { PlayerManager } from '../ObjectManagers/PlayerManager';
-import { shootSingleLaser } from '../util/laserAttack';
+import { shootSingleLaser } from '../util/laser-attack';
 import { teleportToTarget } from '../util/teleport';
+import { moveToTargetFixedDistance } from '../util/move';
 
 export type GlennBossMoves = 'GroupLaser' | 'Slash' | 'Teleport' | 'Sword' | 'SummonTornado' | 'ShotgunLaser' | 'TornadoSlash';
 
@@ -13,11 +14,14 @@ export class GlennBoss extends BaseEnemy {
   private nextAttackTime: number = 0; 
   private laserNumbers: number = 24;
   private laserRadius: number = 300;
-  private laserOffset: number = 100;
+
+  private teleportSlashDistance: number = 400;
+  private swordSlashDistance: number = 400;
+  private attackPauseDuration: number = 400;
 
   private readonly attackDurations: Record<GlennBossMoves, number> = {
     GroupLaser: 5000,
-    Slash: 1000,
+    Slash: 3000,
     Teleport: 1000,
     Sword: 1200,
     TornadoSlash: 2500,
@@ -45,11 +49,11 @@ export class GlennBoss extends BaseEnemy {
   attack(currentTime: number): void {
     const moves: GlennBossMoves[] = [
       'GroupLaser',
-      // 'Slash',
       'Teleport',
+      'ShotgunLaser',
+      'Slash',
       // 'Sword',
       // 'SummonTornado',
-      'ShotgunLaser',
       // 'TornadoSlash'
     ];
     const randomIndex = Phaser.Math.Between(0, moves.length - 1);
@@ -68,9 +72,67 @@ export class GlennBoss extends BaseEnemy {
       this.executeShotgunLaser();
     }
 
+    if (selectedMove === 'Slash') {
+      this.executeSlashAttack();
+    }
+
     const duration = this.attackDurations[selectedMove];
     this.nextAttackTime = currentTime + duration;
   }
+
+  executeSlashAttack(): void {
+    console.log('slashing!');
+    
+    const bossPos = new Phaser.Math.Vector2(this.gameObject.x, this.gameObject.y);
+    const currentPlayerPos = this.playerManager.getPlayerPosition();
+    const distance = Phaser.Math.Distance.Between(bossPos.x, bossPos.y, currentPlayerPos.x, currentPlayerPos.y);
+    const attackDur = (this.attackDurations.Slash - (this.attackPauseDuration * 3)-100) / 3;
+    
+    console.log('distance', distance);
+    
+    if (distance >= this.teleportSlashDistance) {
+      teleportToTarget(this.scene, this.gameObject, this.playerManager.player, 200);
+    }
+    
+    // Delay before the first move.
+    this.scene.time.delayedCall(this.attackPauseDuration, () => {
+      // Chain three sequential moves with pauses between them.
+      moveToTargetFixedDistance(
+        this.scene,
+        this.gameObject,
+        this.playerManager.getPlayerPosition(), // get fresh position
+        this.swordSlashDistance,
+        attackDur,
+        () => {
+          // Wait for attackPauseDuration before starting the second move.
+          this.scene.time.delayedCall(this.attackPauseDuration, () => {
+            moveToTargetFixedDistance(
+              this.scene,
+              this.gameObject,
+              this.playerManager.getPlayerPosition(), // update target again
+              this.swordSlashDistance,
+              attackDur,
+              () => {
+                // Wait again before the third move.
+                this.scene.time.delayedCall(this.attackPauseDuration, () => {
+                  moveToTargetFixedDistance(
+                    this.scene,
+                    this.gameObject,
+                    this.playerManager.getPlayerPosition(), // update for the third move
+                    this.swordSlashDistance,
+                    attackDur
+                  );
+                });
+              }
+            );
+          });
+        }
+      );
+    });
+  }
+  
+  
+  
 
   executeTeleportToPlayer(): void {
     teleportToTarget(this.scene, this.gameObject, this.playerManager.player, 200);

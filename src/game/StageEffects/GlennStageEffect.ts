@@ -1,7 +1,7 @@
 // src/managers/GlennStageEffect.ts
 import Phaser from 'phaser';
 import { PlayerManager } from '../ObjectManagers/PlayerManager';
-import { animateFillCircle, createDamageCircle, spawnCircleOutlineContainer } from '../util/circleAttacks';
+import { animateFillCircle, createDamageCircle, spawnCircleOutlineContainer } from  '../util/circle-attacks';
 
 export class GlennStageEffect {
   private scene: Phaser.Scene;
