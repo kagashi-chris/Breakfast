@@ -9,6 +9,8 @@ export type GlennBossMoves = 'GroupLaser' | 'Slash' | 'Teleport' | 'Sword' | 'Su
 
 export class GlennBoss extends BaseEnemy {
   public gameObject: Phaser.GameObjects.Arc;
+  private delayBetweenEachAttack: number = 1000;
+  private previousAttack: GlennBossMoves | null = null;
   private canAttack: boolean = false;
   private playerManager: PlayerManager;
   private nextAttackTime: number = 0; 
@@ -21,7 +23,7 @@ export class GlennBoss extends BaseEnemy {
   private attackPauseDuration: number = 400;
 
   private readonly attackDurations: Record<GlennBossMoves, number> = {
-    GroupLaser: 5000,
+    GroupLaser: 3000,
     Slash: 3000,
     Teleport: 1000,
     Sword: 1200,
@@ -67,6 +69,8 @@ export class GlennBoss extends BaseEnemy {
     const selectedMove = moves[randomIndex];
     console.log('GlennBoss attack move:', selectedMove);
 
+    if(selectedMove === this.previousAttack) return;
+
     if (selectedMove === 'GroupLaser') {
       this.executeGroupLaser();
     }
@@ -85,8 +89,10 @@ export class GlennBoss extends BaseEnemy {
       this.executeSlashAttack();
     }
 
+    this.previousAttack = selectedMove;
+
     const duration = this.attackDurations[selectedMove];
-    this.nextAttackTime = currentTime + duration;
+    this.nextAttackTime = currentTime + duration + this.delayBetweenEachAttack;
   }
 
   executeSlashAttack(): void {

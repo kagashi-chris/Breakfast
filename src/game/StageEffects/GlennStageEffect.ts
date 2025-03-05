@@ -15,9 +15,9 @@ export class GlennStageEffect {
   private redCircleAmount: number = 8;
   private redCircleRadius: number = 150;
   private redCircleThickness: number = 2;
-  private redDamageCircleDuration: number = 17000;
+  private redDamageCircleDuration: number = 18000;
 
-  private chillCircleSpawnInterval: number = 12000;
+  private chillCircleSpawnInterval: number = 20000;
   private chillCircleDur: number = 4000;
   private chillCircleRadius: number = 150;
   private chillCircleThickness: number = 4;
